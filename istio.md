@@ -38,6 +38,6 @@ to see HTML page with the following content:
 Remove Gateway and nginx-probe resources:
 
 ```bash
-kubectl delete -f denitions/001-nginx-probe-80.yaml
-kubectl delete -f denitions/001-simple-http-gateway.yaml
+kubectl delete -f definitions/001-nginx-probe-80.yaml
+kubectl delete -f definitions/001-simple-http-gateway.yaml
 ```
