@@ -1,0 +1,104 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-probe
+  namespace: nginx-probe
+spec:
+  replicas: 1
+  template: 
+    metadata:
+      labels:
+        role: nginx-probe
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.7.9
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: "config"
+              mountPath: "/etc/nginx/nginx.conf"
+              subPath: "nginx.conf"
+            - name: "index"
+              mountPath: "/var/www/nginx-probe/index.html"
+              subPath: "index.html"
+      volumes:
+        - name: "config"
+          configMap:
+            name: "nginx-probe-config"
+        - name: "index"
+          configMap:
+            name: "nginx-probe-index"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-probe-svc
+  namespace: nginx-probe
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+  selector:
+    role: nginx-probe
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-probe-config
+  namespace: nginx-probe
+data:
+  nginx.conf: |+
+    worker_processes  5;
+    events {
+      worker_connections  4096;
+    }
+    http {
+        server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+          root /var/www/nginx-probe;
+          index index.html;
+
+          location / {
+            access_log  /dev/stdout;
+            allow all;
+          }
+        }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-probe-index
+  namespace: nginx-probe
+data:
+  index.html: |+
+    <h1>test_ok</h1>
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: nginx-probe-default
+  namespace: nginx-probe
+spec:
+  gateways:
+    - istio-system/istio-gateway
+  hosts:
+    - "*"
+  http:
+    - match:
+        - uri:
+            prefix: /nginx-probe
+      route:
+        - destination:
+            host: nginx-probe-svc.nginx-probe.svc.cluster.local
+            port:
+              number: 80
+      rewrite:
+        uri: /
