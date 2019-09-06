@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   name: nginx-probe
 ---
-apiVersion: v1
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: nginx-probe
