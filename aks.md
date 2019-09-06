@@ -238,3 +238,17 @@ git clone https://github.com/Shenderchuk/aks-private-istio-lab.git
 ### Expected result
 
 - Lab  repository cloned and available for use
+
+## Cleanup
+
+After finishing the lab deprovision AKS cluster by removing resource group
+
+### Steps
+
+```bash
+az group delete --resource-group aks-istio-demo-rg
+```
+
+### Expected result
+
+- Resource group and AKS cluster removed.
